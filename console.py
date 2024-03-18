@@ -11,7 +11,7 @@ from models.state import State
 from models.city import City
 from models.amenity import Amenity
 from models.review import Review
-
+from datetime import datetime
 
 class HBNBCommand(cmd.Cmd):
     """ Contains the functionality for the HBNB console"""
@@ -20,15 +20,15 @@ class HBNBCommand(cmd.Cmd):
     prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
 
     classes = {
-               'BaseModel': BaseModel, 'User': User, 'Place': Place,
-               'State': State, 'City': City, 'Amenity': Amenity,
-               'Review': Review
-              }
+            'BaseModel': BaseModel, 'User': User, 'Place': Place,
+            'State': State, 'City': City, 'Amenity': Amenity,
+            'Review': Review
+            }
     dot_cmds = ['all', 'count', 'show', 'destroy', 'update']
     types = {
-             'number_rooms': int, 'number_bathrooms': int,
-             'max_guest': int, 'price_by_night': int,
-             'latitude': float, 'longitude': float
+            'number_rooms': int, 'number_bathrooms': int,
+            'max_guest': int, 'price_by_night': int,
+            'latitude': float, 'longitude': float
             }
 
     def preloop(self):
@@ -76,7 +76,7 @@ class HBNBCommand(cmd.Cmd):
                     # check for *args or **kwargs
                     if pline[0] == '{' and pline[-1] =='}'\
                             and type(eval(pline)) is dict:
-                        _args = pline
+                                _args = pline
                     else:
                         _args = pline.replace(',', '')
                         # _args = _args.replace('\"', '')
@@ -119,41 +119,53 @@ class HBNBCommand(cmd.Cmd):
         if not args:
             print("** class name missing **")
             return
+        try:
+            args_list = args.split()
+            class_name = args_list[0]
 
-        args_list = args.split()
-        class_name = args_list[0]
+            if class_name not in HBNBCommand.classes:
+                print("** class doesn't exist **")
+                return
 
-        if class_name not in HBNBCommand.classes:
-            print("** class doesn't exist **")
-            return
+            class_attributes = inspect.signature(HBNBCommand.classes[class_name]).parameters.keys()
 
-        class_attributes = inspect.signature(HBNBCommand.classes[class_name]).parameters.keys()
+            params = {}
+            for param in args_list[1:]:
+                if '=' not in param:
+                    continue
+            key, value = param.split('=')
 
-        params = {}
-        for param in args_list[1:]:
-            if '=' not in param:
-                continue
-        key, value = param.split('=')
+            if value.startswith('"') and value.endswith('"'):
+                value = value[1:-1].replace('_', ' ').replace('\\"', '"')
+            else:
+                try:
+                    value = eval(value)
+                except (SyntaxError, NameError):
+                    pass
 
-        if value.startswith('"') and value.endswith('"'):
-            value = value[1:-1].replace('_', ' ').replace('\\"', '"')
+            if key in class_attributes:
+                try:
+                    if '.' in value:
+                        value = float(value)
+                    elif value.isdigit():
+                        value = int(value)
+                except ValueError:
+                    pass
 
-        if key in class_attributes:
-            try:
-                if '.' in value:
-                    value = float(value)
-                elif value.isdigit():
-                    value = int(value)
-            except ValueError:
-                pass
+            params[key] = value
 
-        params[key] = value
-        new_instance = HBNBCommand.classes[class_name](**params)
+            # Ensure 'updated_at' is present in params with a default value
+            if 'updated_at' not in params:
+                params['updated_at'] = datetime.utcnow()
 
-        storage.save()
-        print(new_instance.id)
-        storage.save()
+            new_instance = HBNBCommand.classes[class_name](**params)
 
+            storage.save()
+            print(new_instance.id)
+            storage.save()
+
+        except Exception as e:
+            print(f"Error: {str(e)}")
 
     def help_create(self):
         """ Help information for the create method """
@@ -349,14 +361,6 @@ class HBNBCommand(cmd.Cmd):
         print("Updates an object with new information")
         print("Usage: update <className> <id> <attName> <attVal>\n")
 
-    class HBNBCommand(cmd.Cmd):
-    # Existing code...
-
-    def cmdloop(self):
-        try:
-            super().cmdloop()
-        except Exception as e:
-            print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     HBNBCommand().cmdloop()

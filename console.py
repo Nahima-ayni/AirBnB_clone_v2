@@ -41,43 +41,38 @@ class HBNBCommand(cmd.Cmd):
         return True
 
     def do_create(self, arg):
-        """
-    Usage: create <class> <key 1>=<value 2> <key 2>=<value 2> ...
-    Create a new class instance with given keys/values and print its id.
     """
+    Create an object using the provided class name and parameters.
+
+    Parameters:
+    arg (str): A string containing the class name followed by parameters.
+
+    Returns:
+    None
+    """
+    import shlex
+
+    args = shlex.split(arg)
+    if len(args) < 2:
+        print("Error: Missing class name and/or parameters")
+        return
+
+    class_name = args[0]
+    params = args[1:]
+
+    param_dict = {}
+
+    for param in params:
+        key, value = param.split('=', 1)
         try:
-            if not arg:
-                raise SyntaxError()
+            value = float(value)
+        except ValueError:
+            value = str(value)
+        param_dict[key] = value
 
-            my_list = arg.split(" ")
-            kwargs = {}
+    obj = self.engine.create(class_name, **param_dict)
 
-            for i in range(1, len(my_list)):
-                key, value = tuple(my_list[i].split("="))
-
-            if value[0] == '"':
-                value = value.strip('"').replace("_", " ")
-            else:
-                try:
-                    value = eval(value)
-                except (SyntaxError, NameError):
-                    continue
-
-            kwargs[key] = value
-
-            if kwargs == {}:
-                obj = eval(my_list[0])()
-            else:
-                obj = eval(my_list[0])(**kwargs)
-            storage.new(obj)
-
-            print(obj.id)
-            obj.save()
-
-        except SyntaxError:
-            print("** class name missing **")
-        except NameError:
-            print("** class doesn't exist **")
+    print(obj)
 
     def do_show(self, line):
         """Prints the string representation of an instance

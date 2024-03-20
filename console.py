@@ -40,39 +40,40 @@ class HBNBCommand(cmd.Cmd):
         print("")
         return True
 
-    def do_create(self, line):
-        """Usage: create <class> <key 1>=<value 2> <key 2>=<value 2> ...
-        Create a new class instance with given keys/values and print its id.
-        """
-        try:
-            if not line:
-                raise SyntaxError()
-            my_list = line.split(" ")
+    def do_create(self, arg):
+        """Create a new instance of a class."""
+        if not arg:
+            print("Usage: create <Class name> <param1> <param2> ...")
+            return
 
-            kwargs = {}
-            for i in range(1, len(my_list)):
-                key, value = tuple(my_list[i].split("="))
-                if value[0] == '"':
-                    value = value.strip('"').replace("_", " ")
-                else:
-                    try:
-                        value = eval(value)
-                    except (SyntaxError, NameError):
-                        continue
+        args = arg.split()
+        class_name = args[0]
+        params = args[1:]
+
+        if not class_name:
+            print("Class name cannot be empty.")
+            return
+
+        kwargs = {}
+
+        for param in params:
+            match = re.match(r'^(\w+)="(.*)"$', param)
+            if match:
+                key, value = match.groups()
+                value = value.replace('_', ' ')
                 kwargs[key] = value
+            elif re.match(r'^(\w+)=(\d+)$', param):
+                key, value = param.split('=')
+                kwargs[key] = int(value)
+            elif re.match(r'^(\w+)=([\d.]+)$', param):
+                key, value = param.split('=')
+                kwargs[key] = float(value)
 
-            if kwargs == {}:
-                obj = eval(my_list[0])()
-            else:
-                obj = eval(my_list[0])(**kwargs)
-                storage.new(obj)
-            print(obj.id)
-            obj.save()
-
-        except SyntaxError:
-            print("** class name missing **")
-        except NameError:
-            print("** class doesn't exist **")
+        try:
+            obj = eval(f"{class_name}(**kwargs)")
+            print(f"Created instance of {class_name} with parameters: {kwargs}")
+        except Exception as e:
+            print(f"Failed to create instance of {class_name}: {str(e)}")
 
     def do_show(self, line):
         """Prints the string representation of an instance

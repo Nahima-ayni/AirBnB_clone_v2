@@ -40,40 +40,39 @@ class HBNBCommand(cmd.Cmd):
         print("")
         return True
 
-    def do_create(self, arg):
-        """Create a new instance of a class"""
-        if not arg:
+    def do_create(self, line):
+        """Usage: create <class> <key 1>=<value 2> <key 2>=<value 2> ...
+        Create a new class instance with given keys/values and print its id.
+        """
+        try:
+            if not line:
+                raise SyntaxError()
+            my_list = line.split(" ")
+
+            kwargs = {}
+            for i in range(1, len(my_list)):
+                key, value = tuple(my_list[i].split("="))
+                if value[0] == '"':
+                    value = value.strip('"').replace("_", " ")
+                else:
+                    try:
+                        value = eval(value)
+                    except (SyntaxError, NameError):
+                        continue
+                kwargs[key] = value
+
+            if kwargs == {}:
+                obj = eval(my_list[0])()
+            else:
+                obj = eval(my_list[0])(**kwargs)
+                storage.new(obj)
+            print(obj.id)
+            obj.save()
+
+        except SyntaxError:
             print("** class name missing **")
-            return
-
-        args = arg.split()
-        class_name = args[0]
-        valid_types = [str, int, float]
-
-        if class_name not in self.__classes:  # Corrected line
+        except NameError:
             print("** class doesn't exist **")
-            return
-
-        params = {}
-        for param in args[1:]:
-            if '=' in param:
-                key, value = param.split('=', 1)
-                if key.isdigit():
-                    key = int(key)
-                elif key.replace('.', '', 1).isdigit():
-                    key = float(key)
-            if value.startswith('"') and value.endswith('"'):
-                value = value[1:-1].replace('_', ' ').replace('\\"', '"')
-                params[key] = value
-            elif '.' in value and all(
-                part.isdigit() for part in value.split('.', 1)):
-                params[key] = float(value)
-            elif value.isdigit():
-                params[key] = int(value)
-
-        instance = globals()[class_name](**params)
-        instance.save()
-        print(instance.id)
 
     def do_show(self, line):
         """Prints the string representation of an instance
@@ -267,7 +266,10 @@ class HBNBCommand(cmd.Cmd):
                     self.do_update(args)
         else:
             cmd.Cmd.default(self, line)
-
+    def reload(self):
+        """ reload """
+        from models import storage
+        storage.reload()
 
 if __name__ == '__main__':
     HBNBCommand().cmdloop()

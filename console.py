@@ -50,7 +50,7 @@ class HBNBCommand(cmd.Cmd):
         class_name = args[0]
         valid_types = [str, int, float]
 
-        if class_name not in self.classes:
+        if class_name not in self.__classes:  # Corrected line
             print("** class doesn't exist **")
             return
 
@@ -58,16 +58,20 @@ class HBNBCommand(cmd.Cmd):
         for param in args[1:]:
             if '=' in param:
                 key, value = param.split('=', 1)
+                if key.isdigit():
+                    key = int(key)
+                elif key.replace('.', '', 1).isdigit():
+                    key = float(key)
             if value.startswith('"') and value.endswith('"'):
                 value = value[1:-1].replace('_', ' ').replace('\\"', '"')
                 params[key] = value
             elif '.' in value and all(
-                    part.isdigit() for part in value.split('.', 1)):
+                part.isdigit() for part in value.split('.', 1)):
                 params[key] = float(value)
             elif value.isdigit():
                 params[key] = int(value)
 
-        instance = self.classes[class_name](**params)
+        instance = globals()[class_name](**params)
         instance.save()
         print(instance.id)
 

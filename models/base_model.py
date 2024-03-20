@@ -17,7 +17,10 @@ class BaseModel:
     def __init__(self, *args, **kwargs):
         """ init constructor"""
         for key, value in kwargs.items():
-            setattr(self, key, value)
+            if key != '__class__':
+                setattr(self, key, value)
+            else:
+                print("Warning: '__class__' attribute cannot be set directly.")
 
     def save(self):
         """save storage """

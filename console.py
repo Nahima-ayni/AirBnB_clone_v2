@@ -41,38 +41,35 @@ class HBNBCommand(cmd.Cmd):
         return True
 
     def do_create(self, arg):
-    """
-    Create an object using the provided class name and parameters.
+        """Create a new instance of a class"""
+        if not arg:
+            print("** class name missing **")
+            return
 
-    Parameters:
-    arg (str): A string containing the class name followed by parameters.
+        args = arg.split()
+        class_name = args[0]
+        valid_types = [str, int, float]
 
-    Returns:
-    None
-    """
-    import shlex
+        if class_name not in self.classes:
+            print("** class doesn't exist **")
+            return
 
-    args = shlex.split(arg)
-    if len(args) < 2:
-        print("Error: Missing class name and/or parameters")
-        return
+        params = {}
+        for param in args[1:]:
+            if '=' in param:
+                key, value = param.split('=', 1)
+            if value.startswith('"') and value.endswith('"'):
+                value = value[1:-1].replace('_', ' ').replace('\\"', '"')
+                params[key] = value
+            elif '.' in value and all(
+                    part.isdigit() for part in value.split('.', 1)):
+                params[key] = float(value)
+            elif value.isdigit():
+                params[key] = int(value)
 
-    class_name = args[0]
-    params = args[1:]
-
-    param_dict = {}
-
-    for param in params:
-        key, value = param.split('=', 1)
-        try:
-            value = float(value)
-        except ValueError:
-            value = str(value)
-        param_dict[key] = value
-
-    obj = self.engine.create(class_name, **param_dict)
-
-    print(obj)
+        instance = self.classes[class_name](**params)
+        instance.save()
+        print(instance.id)
 
     def do_show(self, line):
         """Prints the string representation of an instance

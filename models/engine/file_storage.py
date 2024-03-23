@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""This module defines a class to manage file storage for hbnb clone"""
+"""This module defines a class"""
 from datetime import datetime
 import json
 from models.base_model import BaseModel

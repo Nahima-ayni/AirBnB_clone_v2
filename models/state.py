@@ -1,47 +1,35 @@
 #!/usr/bin/python3
-""" holds class User"""
-import hashlib
+""" holds class State"""
 import models
 from models.base_model import BaseModel, Base
 from os import getenv
-from sqlalchemy.orm import relationship
+import sqlalchemy
 from sqlalchemy import Column, String
+from sqlalchemy.orm import relationship
 
 
-class User(BaseModel, Base):
-    """Representation of a user """
+class State(BaseModel, Base):
+    """Representation of state """
     if getenv('HBNB_TYPE_STORAGE') == 'db':
-        __tablename__ = 'users'
-        email = Column(String(128),
-                       nullable=False)
-        _password = Column('password',
-                           String(128),
-                           nullable=False)
-        first_name = Column(String(128),
-                            nullable=True)
-        last_name = Column(String(128),
-                           nullable=True)
-        places = relationship("Place",
-                              backref="user",
-                              cascade="all, delete-orphan")
-        reviews = relationship("Review",
-                               backref="user",
-                               cascade="all, delete-orphan")
+        __tablename__ = 'states'
+        name = Column(String(128),
+                      nullable=False)
+        cities = relationship("City", cascade="all, delete",
+                              backref="states")
     else:
-        email = ""
-        _password = ""
-        first_name = ""
-        last_name = ""
+        name = ""
 
     def __init__(self, *args, **kwargs):
-        """initializes user"""
+        """initializes state"""
         super().__init__(*args, **kwargs)
 
-    @property
-    def password(self):
-        return self._password
-
-    @password.setter
-    def password(self, pwd):
-        """hashing password values"""
-        self._password = pwd
+    if getenv('HBNB_TYPE_STORAGE') != 'db':
+        @property
+        def cities(self):
+            """fs getter attribute that returns City instances"""
+            values_city = models.storage.all("City").values()
+            list_city = []
+            for city in values_city:
+                if city.state_id == self.id:
+                    list_city.append(city)
+            return list_city

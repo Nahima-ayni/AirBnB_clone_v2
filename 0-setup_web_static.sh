@@ -3,6 +3,7 @@
 
 sudo apt-get update
 sudo apt-get install nginx -y
+sudo ufw allow 'Nginx HTTP'
 
 sudo mkdir -p /data/web_static/releases/test
 sudo mkdir -p /data/web_static/shared
@@ -14,20 +15,6 @@ sudo ln -s /data/web_static/releases/test/ /data/web_static/current
 
 sudo chown -R ubuntu:ubuntu /data/
 
-config_block="
-server {
-    listen 80;
-    listen [::]:80;
-    server_name naimah.tech;
-
-    location /hbnb_static/ {
-        alias /data/web_static/current/;
-    }
-}
-"
-echo "$config_block" | sudo tee /etc/nginx/sites-available/mydomainname.tech >/dev/null
-sudo ln -sf /etc/nginx/sites-available/mydomainname.tech /etc/nginx/sites-enabled/mydomainname.tech
+sudo sed -i '/listen 80 default_server/a location /hbnb_static { alias /data/web_static/current/;}' /etc/nginx/sites-enabled/default
 
 sudo service nginx restart
-
-exit 0

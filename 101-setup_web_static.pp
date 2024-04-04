@@ -1,4 +1,4 @@
-# Puppet for setup
+# Configures a web server for deployment of web_static
 
 $nginx_conf = "server {
     listen 80 default_server;

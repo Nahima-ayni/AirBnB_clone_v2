@@ -6,13 +6,14 @@ from datetime import date
 
 
 def do_pack():
-    """ Fabric script that generates a .tgz archive from the contents of the web_static"""
-    file_name = strftime("%Y%m%d%H%M%S")
+    """ Fabric script that generates a .tgz archive
+        from the contents of the web_static"""
+    filename = strftime("%Y%m%d%H%M%S")
     try:
         local("mkdir -p versions")
-        local("tar -czvf versions/web_static_{}.tgz web_static/"
-          .format(file_name))
-        return "versions/web_static_{}.tgz".format(file_name)
+        local("tar -czvf versions/web_static_{}.tgz web_static/".format(
+            filename))
+        return "versions/web_static_{}.tgz".format(filename)
 
     except Exception as e:
         return None

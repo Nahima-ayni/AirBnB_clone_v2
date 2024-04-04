@@ -1,59 +1,87 @@
-# Puppet manifest to set up web servers for the deployment of web_static
+# Puppet for setup
 
-# Ensure the package manager is updated and nginx is installed
+$nginx_conf = "server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    add_header X-Served-By ${hostname};
+    root   /var/www/html;
+    index  index.html index.htm;
+    location /hbnb_static {
+        alias /data/web_static/current;
+        index index.html index.htm;
+    }
+    location /redirect_me {
+        return 301 http://linktr.ee/firdaus_h_salim/;
+    }
+    error_page 404 /404.html;
+    location /404 {
+      root /var/www/html;
+      internal;
+    }
+}"
+
 package { 'nginx':
-  ensure => installed,
-  before => File['/etc/nginx/sites-enabled/default'],
+  ensure   => 'present',
+  provider => 'apt'
 }
 
-# Allow Nginx HTTP through the firewall
-firewall { '100 allow nginx http':
-  action => 'accept',
-  proto  => 'tcp',
-  port   => '80',
+-> file { '/data':
+  ensure  => 'directory'
 }
 
-# Create directories for web_static
-file { '/data/web_static/releases/test':
-  ensure => 'directory',
-  owner  => 'ubuntu',
-  group  => 'ubuntu',
+-> file { '/data/web_static':
+  ensure => 'directory'
 }
 
-file { '/data/web_static/shared':
-  ensure => 'directory',
-  owner  => 'ubuntu',
-  group  => 'ubuntu',
+-> file { '/data/web_static/releases':
+  ensure => 'directory'
 }
 
-# Create a test index.html file
-file { '/data/web_static/releases/test/index.html':
+-> file { '/data/web_static/releases/test':
+  ensure => 'directory'
+}
+
+-> file { '/data/web_static/shared':
+  ensure => 'directory'
+}
+
+-> file { '/data/web_static/releases/test/index.html':
   ensure  => 'present',
-  content => '<html><head><title>Test Page</title></head><body>This is a test page</body></html>',
-  owner   => 'ubuntu',
-  group   => 'ubuntu',
+  content => "this webpage is found in data/web_static/releases/test/index.htm \n"
 }
 
-# Remove current symlink and create a new one
-file { '/data/web_static/current':
+-> file { '/data/web_static/current':
   ensure => 'link',
-  target => '/data/web_static/releases/test',
-  force  => true,
-  require => File['/data/web_static/releases/test/index.html'],
+  target => '/data/web_static/releases/test'
 }
 
-# Update nginx configuration to serve the static content
-file_line { 'nginx_site_config':
-  path => '/etc/nginx/sites-enabled/default',
-  line => '    location /hbnb_static { alias /data/web_static/current/; }',
-  match => '^\\s*listen 80 default_server;',
-  append_on_no_match => true,
-  notify => Service['nginx'],
+-> exec { 'chown -R ubuntu:ubuntu /data/':
+  path => '/usr/bin/:/usr/local/bin/:/bin/'
 }
 
-# Ensure nginx service is running
-service { 'nginx':
-  ensure    => 'running',
-  enable    => true,
-  subscribe => File['/etc/nginx/sites-enabled/default'],
+file { '/var/www':
+  ensure => 'directory'
+}
+
+-> file { '/var/www/html':
+  ensure => 'directory'
+}
+
+-> file { '/var/www/html/index.html':
+  ensure  => 'present',
+  content => "This is my first upload  in /var/www/index.html***\n"
+}
+
+-> file { '/var/www/html/404.html':
+  ensure  => 'present',
+  content => "Ceci n'est pas une page - Error page\n"
+}
+
+-> file { '/etc/nginx/sites-available/default':
+  ensure  => 'present',
+  content => $nginx_conf
+}
+
+-> exec { 'nginx restart':
+  path => '/etc/init.d/'
 }

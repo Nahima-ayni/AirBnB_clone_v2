@@ -23,8 +23,8 @@ def route2():
 
 
 @app.route('/c/<text>', strict_slashes=False)
-def c_text():
-    return "c {}".format(text)
+def c(text):
+    return "C " + text.replace("_", " ")
 
 
 if __name__ == "__main__":

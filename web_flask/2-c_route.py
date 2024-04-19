@@ -23,8 +23,7 @@ def route2():
 
 
 @app.route('/c/<text>', strict_slashes=False)
-def cText(text):
-    text = text.replace('_', ' ')
+def c_text():
     return "c {}".format(text)
 
 

@@ -4,7 +4,7 @@ starts a Flask web application:
 Your web application must be listening on 0.0.0.0, port 5000
 must use the option strict_slashes=False in your route definition
 """
-from flask import Flask
+from flask import Flask, render_template
 
 
 app = Flask(__name__)
@@ -36,6 +36,11 @@ def python(text):
 @app.route('/number/<int:n>', strict_slashes=False)
 def number(n):
     return f"{n} is a number"
+
+
+@app.route('/number_temp/int:n', strict_slashes=False)
+def number_temp(n):
+    return render_template('5-number.html', number=n)
 
 
 if __name__ == "__main__":

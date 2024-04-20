@@ -13,7 +13,10 @@ import uuid
 
 time = "%Y-%m-%dT%H:%M:%S.%f"
 
-Base = declarative_base()
+if models.storage_t == "db":
+    Base = declarative_base()
+else:
+    Base = object
 
 
 class BaseModel:
@@ -25,7 +28,6 @@ class BaseModel:
 
     def __init__(self, *args, **kwargs):
         """Initialization of the base model"""
-        import models  # Deferred import to avoid circular import issues
         if kwargs:
             for key, value in kwargs.items():
                 if key != "__class__":
@@ -45,18 +47,10 @@ class BaseModel:
             self.created_at = datetime.utcnow()
             self.updated_at = self.created_at
 
-        import models
-        if models.storage_t == "db":
-            self.id = Column(String(60), primary_key=True)
-            self.created_at = Column(DateTime, default=datetime.utcnow)
-            self.updated_at = Column(DateTime, default=datetime.utcnow)
-
-
-
     def __str__(self):
         """String representation of the BaseModel class"""
         return "[{:s}] ({:s}) {}".format(self.__class__.__name__, self.id,
-                self.__dict__)
+                                         self.__dict__)
 
     def save(self):
         """updates the attribute 'updated_at' with the current datetime"""

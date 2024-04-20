@@ -4,6 +4,7 @@ Contains class BaseModel
 """
 
 from datetime import datetime
+import models
 from os import getenv
 import sqlalchemy
 from sqlalchemy import Column, String, DateTime
@@ -22,8 +23,6 @@ class BaseModel:
         created_at = Column(DateTime, default=datetime.utcnow)
         updated_at = Column(DateTime, default=datetime.utcnow)
 
-    def __init__(self, *args, **kwargs):
-        """The BaseModel class from which future classes will be derived"""
     def __init__(self, *args, **kwargs):
         """Initialization of the base model"""
         import models  # Deferred import to avoid circular import issues
@@ -46,6 +45,7 @@ class BaseModel:
             self.created_at = datetime.utcnow()
             self.updated_at = self.created_at
 
+        import models
         if models.storage_t == "db":
             self.id = Column(String(60), primary_key=True)
             self.created_at = Column(DateTime, default=datetime.utcnow)
